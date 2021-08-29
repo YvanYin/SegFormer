@@ -7,7 +7,7 @@ from mmseg.ops import resize
 from .. import builder
 from ..builder import SEGMENTORS
 from .base import BaseSegmentor
-
+import numpy as np
 
 @SEGMENTORS.register_module()
 class EncoderDecoder(BaseSegmentor):
@@ -37,7 +37,7 @@ class EncoderDecoder(BaseSegmentor):
         self.test_cfg = test_cfg
 
         self.init_weights(pretrained=pretrained)
-
+        self.emb_transfer = torch.tensor(np.load('./mmseg/models/losses/ade20k_cat2vec.npy')).float()
         assert self.with_decode_head
 
     def _init_decode_head(self, decode_head):
@@ -91,6 +91,7 @@ class EncoderDecoder(BaseSegmentor):
             size=img.shape[2:],
             mode='bilinear',
             align_corners=self.align_corners)
+
         return out
 
     def _decode_head_forward_train(self, x, img_metas, gt_semantic_seg):
@@ -108,6 +109,7 @@ class EncoderDecoder(BaseSegmentor):
         """Run forward function and calculate loss for decode head in
         inference."""
         seg_logits = self.decode_head.forward_test(x, img_metas, self.test_cfg)
+
         return seg_logits
 
     def _auxiliary_head_forward_train(self, x, img_metas, gt_semantic_seg):
@@ -245,9 +247,13 @@ class EncoderDecoder(BaseSegmentor):
         ori_shape = img_meta[0]['ori_shape']
         assert all(_['ori_shape'] == ori_shape for _ in img_meta)
         if self.test_cfg.mode == 'slide':
-            seg_logit = self.slide_inference(img, img_meta, rescale)
+            seg_logit_emb = self.slide_inference(img, img_meta, rescale)
         else:
-            seg_logit = self.whole_inference(img, img_meta, rescale)
+            seg_logit_emb = self.whole_inference(img, img_meta, rescale)
+        #Add
+        seg_logit = seg_logit_emb.permute(0, 2, 3, 1) @ self.emb_transfer.to(device=seg_logit_emb.device).t() # [N, H, W, num_cls]
+        seg_logit = 100*seg_logit.permute(0, 3, 1, 2)  # [N, num_cls, H, W]
+
         output = F.softmax(seg_logit, dim=1)
         flip = img_meta[0]['flip']
         if flip:

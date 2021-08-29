@@ -5,7 +5,6 @@ import torch.nn.functional as F
 from ..builder import LOSSES
 from .utils import weight_reduce_loss
 
-
 def cross_entropy(pred,
                   label,
                   weight=None,
@@ -16,12 +15,14 @@ def cross_entropy(pred,
     """The wrapper function for :func:`F.cross_entropy`"""
     # class_weight is a manual rescaling weight given to each class.
     # If given, has to be a Tensor of size C element-wise losses
+
     loss = F.cross_entropy(
         pred,
         label,
         weight=class_weight,
         reduction='none',
         ignore_index=ignore_index)
+
 
     # apply weights and do the reduction
     if weight is not None:
