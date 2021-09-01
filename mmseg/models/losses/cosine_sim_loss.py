@@ -55,7 +55,7 @@ class CosineSimLoss(nn.Module):
         self.loss_weight = loss_weight
         self.class_weight = class_weight
         # cat2vec
-        self.vec = torch.tensor(np.load('./mmseg/models/losses/ade20k_cat2vec.npy')).float()
+        self.vec = torch.tensor(np.load('./mmseg/models/losses/ade20k_ori_cat2vec.npy')).float()
         # normalize vec
         self.vec = self.vec / self.vec.norm(dim=1, keepdim=True)
 
