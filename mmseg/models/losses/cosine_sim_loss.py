@@ -83,7 +83,7 @@ class CosineSimLoss(nn.Module):
 
         logit_scale = self.logit_scale.exp()
         cls_score = logit_scale * cls_score.permute(0, 2, 3, 1) @ self.vec.to(device=cls_score.device).t() # [N, H, W, num_cls]
-        cls_score = cls_score.permute(0, 3, 1, 2) # [N, num_cls, H, W]
+        cls_score = cls_score.permute(0, 3, 1, 2).contiguous() # [N, num_cls, H, W]
 
         loss_cls = self.loss_weight * self.cls_criterion(
             cls_score,
