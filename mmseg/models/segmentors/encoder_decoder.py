@@ -37,7 +37,7 @@ class EncoderDecoder(BaseSegmentor):
         self.test_cfg = test_cfg
 
         self.init_weights(pretrained=pretrained)
-        self.emb_transfer = torch.tensor(np.load('./mmseg/models/losses/ade20k_cat2vec.npy')).float()
+        self.emb_transfer = torch.tensor(np.load('./mmseg/models/losses/ade20k_ori_cat2vec.npy')).float()
         assert self.with_decode_head
 
     def _init_decode_head(self, decode_head):
